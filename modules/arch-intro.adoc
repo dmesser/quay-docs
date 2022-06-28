@@ -11,11 +11,12 @@ This guide provides an insight into architectural patterns to use when deploying
 
 == Scalability and high availability (HA)
 
-The code base for the private {productname} offering is substantially the same as that used for link:https::/quay.io[quay.io], the highly available container image registry hosted by Red Hat which provides a multi-tenant SaaS solution. As a result, you can be confident that {productname} can deliver at scale with high availability, whether you deploy on-prem or on public cloud.
+The code base for the self-managed {productname} offering is substantially the same as that used for link:https::/quay.io[quay.io], the highly available container image registry hosted by Red Hat which provides a multi-tenant SaaS solution. As a result, you can be confident that {productname} can deliver at scale with high availability, whether you deploy on-prem or on public cloud.
+{productname} relies on additional services like load balancers, in-memory caches and relational databases that in turn need to be provided in a highly-available fashion in order for the full stack to be considered highly-available. In some scenarios these have to be provided by the customer, depending on the desired service level objective (SLO).
 
 == Security
 
-{productname} is built for real enterprise use cases where content governance and security are two major focus areas. {productname} content governance and security includes built-in vulnerability scanning via Clair.
+{productname} is built for enterprise use cases where content governance and security are two major focus areas. {productname} content governance is provided by a granular access control model and rich automation capabilities with the {productname} API while built-in vulnerability scanning via Clair adds introspection capabilities into stored image content for security analysis.
 
 == Content distribution 
 
@@ -23,51 +24,46 @@ Content distribution features in {productname} include:
 
 Repository mirroring:: {productname} repository mirroring lets you mirror images from external container registries (or another local registry) into your {productname} cluster. Using repository mirroring, you can synchronize images to {productname} based on repository names and tags.
 
-Geo-replication:: {productname} geo-replication allows multiple, geographically distributed Quay deployments to work as a single registry from the perspective of a client or user. It significantly improves push and pull performance in a globally-distributed {productname} setup. Image data is asynchronously replicated in the background with transparent failover / redirect for clients.
+Geo-replication:: {productname} geo-replication allows multiple, geographically distributed Quay deployments to work as a single registry from the perspective of a client or user. It significantly improves push and pull performance in a globally-distributed {productname} setup. Image data is asynchronously replicated in the background with transparent redirect for clients for data that is not yet replicated.
 
-Deployment in disconnected or air-gapped environments:: {productname} can be deployed in a disconnected environment in two ways:
+Proxy-Pull-Thru Caching (Tech Preview):: {productname} allows to integrate external OCI-compliant container registries via a caching layers that provides a transparent way for clients to pull content from third party registries through {productname}. This benefits performance of subsequent pulls due to caching and provides the ability to granularly mediate access to otherwise unstrusted registries at the level of a particular namespace versus the entire registry.
+
+Deployment in disconnected or air-gapped environments:: {productname} can be deployed in a disconnected environment in three ways:
 +
-* {productname} and Clair connected to the internet, with an air-gapped OpenShift cluster accessing the Quay registry through an explicit, white-listed hole in the firewall.
-* {productname} and Clair running inside the firewall, with image and CVE data transferred to the target system using offline media. The data is exported from a separate Quay and Clair deployment that is connected to the internet. 
+* {productname} connected to the public internet, with an air-gapped OpenShift cluster accessing the  registry in a demilitarized network zone.
+* {productname} is connected to public the internet via an HTTP(S) proxy, with an air-gapped or proxied Openshift cluster accessing the registry directly
+* {productname} running inside the firewall, with image and CVE data transferred to the registry system using offline media. The data is exported from a system is connected to the internet.
 
-== Access control
+== Access control and multi-tenancy
 
-{productname} provides both role-based access control (RBAC) and fine-grained access control, and has team features that allow for limited access control of repositories, organizations, and user privileges. {productname} access control features also provide support for dispersed organizations.
+{productname} provides both role-based access control (RBAC) and fine-grained access control, and has a tenancy model that allow for group-based access control for repositories inside organizations. {productname} supports a hard tenancy model for dispersed organizations.
+
+== Quota Control
+
+In addition to strict tenant separation {productname} enables large multi-tenant deployments while maintaining storage growth by the use of a storage quota system. Administrators can define a system-wide default quota and specify quota for individual tenants with variable degree of enforcement.
 
 == Build automation
 
-{productname} supports building Dockerfiles using a set of worker nodes on OpenShift or Kubernetes. Build triggers, such as GitHub webhooks, can be configured to automatically build new versions of your repositories when new code is committed.
+{productname} supports building Dockerfiles using build job orchestration on OpenShift or Kubernetes. Build triggers, such as GitHub or GitLab webhooks, can be configured to automatically build new versions of your repositories when new code is committed.
 
-Prior to {productname} 3.7, Quay ran podman commands in virtual machines launched by pods. Running builds on virtual platforms requires enabling nested virtualization, which is not featured in Red Hat Enterprise Linux or OpenShift Container Platform. As a result, builds had to run on bare-metal clusters, which is an inefficient use of resources.
-
-With {productname} 3.7, the bare-metal constraint required to run builds has been removed by adding an additional build option which does not contain the virtual machine layer. As a result, builds can be run on virtualized platforms. Backwards compatibility to run previous build configurations is also available.
+Prior to {productname} 3.7, builds ran in by containerized virtual machines, requiring bare-metal OpenShift or Kubernetes clusters. With {productname} 3.7 or newer an additional build option was introduced that is purely based on containerized build environment leveraging buildah which does not need a virtual machine layer. As a result, builds can be run virtual or cloud-based OpenShift or Kubernetes clusters.
 
 == Integration
 
-Integration with popular source code management and versioning systems like GitHub, GitLab or BitBucket allows {productname} to continuously build and serve your containerized software.
+Integration with popular source code management and versioning systems like GitHub, GitLab or BitBucket allows {productname} to continuously build and serve your containerized software. Event-based webhook support is available to create rich automation with external API-driven systems, for instance when tags become available or security scans yield vulnerabilites above a certain threshold.
 
 == REST API
 
-{productname} provides a full OAuth 2, RESTful API that:
+{productname} provides a full OAuth2-enabled RESTful API that:
 
 * Is available from endpoints of each {productname} instance from the URL https://<yourquayhost>/api/v1
 * Lets you connect to endpoints, via a browser, to get, delete, post, and put {productname} settings by enabling the Swagger UI
 * Can be accessed by applications that make API calls and use OAuth tokens
 * Sends and receives data as JSON
 
-== Recently added features
-
-Storage Quota on Organizations:: Control and contain storage growth of your container registry with reporting and enforcement.
-
-Transparent pull-thru cache proxy (Tech preview):: Use {productname} as a transparent cache for other registry for improved performance and resiliency.
-
-Geo-replication with the Operator:: Deploy a geographically dispersed container registry across two or more OpenShift clusters.
-
-{productname} container builds on OpenShift:: Build your container images right inside Quay running on top of OpenShift.
-
 == Other features
 
-* Full standards / spec support (Docker v2-2)
+* Full standards / spec support (Docker v2-2, OCI)
 * Long-term protocol support
 * OCI compatibility through test suite compliance
 * Enterprise grade support
