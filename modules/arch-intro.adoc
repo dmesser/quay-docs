@@ -38,7 +38,7 @@ Deployment in disconnected or air-gapped environments:: {productname} can be dep
 
 {productname} provides both role-based access control (RBAC) and fine-grained access control, and has a tenancy model that allow for group-based access control for repositories inside organizations. {productname} supports a hard tenancy model for dispersed organizations.
 
-== Quota Control
+== Quota management
 
 In addition to strict tenant separation {productname} enables large multi-tenant deployments while maintaining storage growth by the use of a storage quota system. Administrators can define a system-wide default quota and specify quota for individual tenants with variable degree of enforcement.
 

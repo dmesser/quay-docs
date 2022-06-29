@@ -1,0 +1,11 @@
+[[core-prereqs-lb]]
+= Network Load balancer
+
+{productname} is designed for scale-out operations to serve as a central registry for an entire fleet of OpenShift and Kubernetes clusters as well as groups of developers using local container clients like `podman` or `docker`.
+To achieve that the registry consists of a horizontally scalable serving layer which can be increased or decreased in capacity simply by adding or removing additional instances of Quay.
+The security scanner, Clair, can also be scaled out seamlessly to provide more image scanning bandwidth.
+For this to work transparently to clients network load balancers are required to distribute incoming traffic from clients to Quay and between Quay and Clair respectively.
+Depending on the infrastructure on top of which {productname} is deployed customers need to provide these load balancers, specifically when running on top of standalone Red Hat Enterprise Linux hosts.
+Generally Layer 7 load balancers for HTTPS can be used as well as Layer 4 TCP load balancers.
+When deployed on top of Red Hat OpenShift Container Platform via the {productname} operator load balancing across Quay and Clair instances and traffic ingress is provided by the cluster using HTTPS load balancing.
+In both cases an additional global load-balancer is required if a geo-replicated deployment of multiple {productname} deployments is desired. In this case a global DNS-based load balancing with geo-location awareness of the client is possible, next to alternatives like layer 7 and layer 4 load balancers with a single global entry point.

@@ -1,32 +1,44 @@
 [[core-prereqs-storage]]
-= Image storage backend
+= Object storage backend
 
 
-{productname} stores all binary blobs in its storage backend. 
+{productname} stores all layers of artifacts uploaded to the registry as binary blobs in a S3-compatible object storage backend. 
 
-Local storage and NFS:: While {productname} can work with local storage and NFS, this should only be used for proof of concept or test setups, as the durability of the binary blobs cannot be guaranteed.
+Non-production storage setup:: {productname} can work with local storage and NFS mounts, however this is **not supported for production use of any kind** and intended solely for proof of concept or test setups, as the read-after-write-integrity of the binary blobs cannot be guaranteed in highly-parallel access environments.
 
-HA storage setup:: For a {productname} HA deployment, you must provide HA image storage, for example: 
+Production storage setup:: For a {productname} production-grade deployment, you must provide S3-compatible objects storage, for example: 
 +
-- **Red Hat OpenShift Data Foundation**, previously known as Red Hat OpenShift Container Storage, is software-defined storage for containers. Engineered as the data and storage services platform for Red Hat OpenShift, Red Hat OpenShift Data Foundation helps teams develop and deploy applications quickly and efficiently across clouds. More information can be found at link:https://www.redhat.com/en/technologies/cloud-computing/openshift-data-foundation[].
-- **Ceph Object Gateway** (also called RADOS Gateway) is an example of a storage solution that can provide the the object storage needed by {productname}. 
+- **Red Hat OpenShift Data Foundation**, previously known as Red Hat OpenShift Container Storage, is software-defined storage for containers. Engineered as the data and storage services platform for Red Hat OpenShift, Red Hat OpenShift Data Foundation (ODF) helps teams develop and deploy applications quickly and efficiently across clouds. More information can be found at link:https://www.redhat.com/en/technologies/cloud-computing/openshift-data-foundation[]. S3-style object storage access is faciliated by the multi-cloud object gateway that is part of the ODF stack.
+- **Red Hat Ceph Storage** is an example of a storage solution that can provide the the object storage needed by {productname}. 
 Detailed instructions on how to use Ceph storage as a highly available storage backend can be found in the link:https://access.redhat.com/documentation/en-us/red_hat_quay/3/html/deploy_red_hat_quay_-_high_availability/preparing_for_red_hat_quay_high_availability#set_up_ceph[Quay High Availability Guide]. 
-Further information on Red Hat Ceph Storage and HA setups can be found in the link:https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/3/pdf/architecture_guide/Red_Hat_Ceph_Storage-3-Architecture_Guide-en-US.pdf[Red Hat Ceph Storage Architecture Guide]
+Further information on Red Hat Ceph Storage and HA setups can be found in the link:https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/3/pdf/architecture_guide/Red_Hat_Ceph_Storage-3-Architecture_Guide-en-US.pdf[Red Hat Ceph Storage Architecture Guide]. S3-style object storage access is faciliated with the Rados Gateway (`rgw`) component that ships as part of the Ceph project.
+- **Cloud Provider Object Storage** can be used for {productname} as well. See our link:https://access.redhat.com/articles/4067991#fnref:4[Tested Integration Matrix] for a full list of supported public and on-prem cloud object storage providers.
 
 
-Geo-replication:: Local storage cannot be used for geo-replication, so a supported on-prem or cloud-based object storage solution must be deployed.  Localized image storage is provided in each region and image pulls are served from the closest available storage engine. Container image pushes are written to the preferred storage engine for the Quay instance, and will then be replicated, in the background, to the other storage engines. This requires the image storage to be accessible from all regions.
+Geo-replication considerations:: For geo-replicated {productname} deployments only S3-compatible object storage is supported. Object storage systems are required in each region and each regional {productname} deployments gets access to all object storage systems but is assigned a preferred local one. 
 
 
-== Supported image storage types
+== Directly supported object storage types
 
 {productname} supports the following on-prem storage types:
 
 * Ceph Rados RGW
 * OpenStack Swift
-* RHODF 4 (via NooBaa)
+* RHODF 4 (Ceph + Multi-Cloud Gateway NooBaa)
+* Standalone Multi-Cloud Gateway NooBaa (only as part of running {productname} on OpenShift)
 
 {productname} supports the following public cloud storage types:
 
 * AWS S3
 * Google Cloud Storage
 * Azure Blob Storage
+
+ifeval::["{productname}" == "Project Quay"]
+== Other object storage types
+{productname} leverages the well-known S3 API for communicating with object storage providers, originally introduced by the Simple Storage Service on Amazon Web Services. This API is not an industry standard, so vendor implementations might slightly vary. However many third-party S3 implementations are known to work, for instance the link:https://min.io/[minio] project.
+endif::[]
+
+ifeval::["{productname}" == "Red Hat Quay"]
+== Indirectly supported object storage types
+{productname} leverages the well-known S3 API for communicating with object storage providers, originally introduced by the Simple Storage Service on Amazon Web Services. This API is not an industry standard, so vendor implementations might slightly vary. Since Red Hat cannot test all available S3 implementations on the market and in lieu of widely adopted compatibility test suite, {productname} adopts the standard Red Hat Third Party Software Support policy. Thus, usage of third-party untested S3 storage providers does not render the {productname} deployment unsupported but in case of issues that originate from the storage system, the customer might be asked to reproduce the issue with a supported storage system.
+endif::[]

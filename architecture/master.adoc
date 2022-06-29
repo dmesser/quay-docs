@@ -18,6 +18,8 @@ include::modules/arch-prereqs.adoc[leveloffset=+1]
 include::modules/core-prereqs-storage.adoc[leveloffset=+2]
 include::modules/core-prereqs-db.adoc[leveloffset=+2]
 include::modules/core-prereqs-redis.adoc[leveloffset=+2]
+include::modules/core-prereqs-lb.adoc[leveloffset=+2]
+
 
 include::modules/core-infrastructure.adoc[leveloffset=+1]
 include::modules/arch-mirror-registry.adoc[leveloffset=+2]

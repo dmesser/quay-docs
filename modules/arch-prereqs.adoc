@@ -1,4 +1,4 @@
 [[arch-prereqs]]
 = {productname} prerequisites
 
-Before deploying {productname}, you need to provision image storage, a database, and Redis.
+Before deploying {productname}, you need to provide an S3-compatible object storage, a relational SQL database (preferrably PostgreSQL), and Redis in-memory cache. Depending on your target infrastructure provider and deployment pattern either HTTPS or TCP load blaancer is needed.
